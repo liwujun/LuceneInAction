@@ -1,7 +1,6 @@
 package com.wuma.LuceneInAction.Familiar;
 
-import java.io.File;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -37,8 +36,22 @@ public class IndexFile {
                 for (File htm : fileshtm) {
                     if (!htm.isDirectory()) {
                         System.out.println(htm.getAbsolutePath());
-                        InputStream is=null;
-
+                        InputStream is = null;
+                        StringBuffer sb = new StringBuffer();
+                        String content = "";
+                        try {
+                            FileInputStream fis = new FileInputStream(htm);
+                            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+                            while ((content = br.readLine()) != null) {
+                                sb.append(content);
+                            }
+                            //output file content
+                            System.out.println(sb);
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
