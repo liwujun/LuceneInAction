@@ -1,8 +1,23 @@
 package com.wuma.LuceneInAction.Familiar;
 
-import java.io.*;
-import java.util.Arrays;
-import java.util.Comparator;
+import com.wuma.LuceneInAction.fileoper.FileUtil;
+import com.wuma.LuceneInAction.util.TestUtil;
+import org.apache.lucene.analysis.WhitespaceAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.RAMDirectory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import static org.apache.lucene.document.Field.Index.NOT_ANALYZED;
 
 /**
  * Created by liwujun
@@ -10,52 +25,54 @@ import java.util.Comparator;
  */
 public class IndexFile {
     static String path = "";
+    static Directory directory;
+    static String dipath = "";
 
-    public static void main(String[] args) {
+    void setUp() throws IOException {
+        directory = new RAMDirectory();
+        IndexWriter writer = getWriter();
+        List<File> filelist = FileUtil.getFileListInDirectory(dipath);
+        for (int i = 0; i < filelist.size(); i++) {
+            Document doc = new Document();
+            doc.add(new Field("filepath", filelist.get(i).getAbsolutePath(),
+                    Field.Store.YES,
+                    NOT_ANALYZED));
+            doc.add(new Field("filecontent", FileUtil.getFileContent(filelist.get(i)),
+                    Field.Store.YES,
+                    Field.Index.ANALYZED));
+            writer.addDocument(doc);
+        }
+        writer.close();
+    }
+
+    public static void main(String[] args) throws IOException {
         System.out.println(args.length);
         if (args.length == 0) {
             System.out.println("need directory path.");
             return;
         } else {
             path = args[0];
+            dipath = path;
             System.out.println("index directory :" + path);
         }
-        File file = new File(path);
-        if (file.isDirectory()) {
-            File[] fileshtm = file.listFiles();
-            if (null != fileshtm && fileshtm.length > 0) {
-                Arrays.sort(fileshtm, new Comparator<File>() {
-                    public int compare(File o1, File o2) {
-                        return (int) (o1.lastModified() - o2.lastModified());
-                    }
-
-                    public boolean equals(Object obj) {
-                        return true;
-                    }
-                });
-                for (File htm : fileshtm) {
-                    if (!htm.isDirectory()) {
-                        System.out.println(htm.getAbsolutePath());
-                        InputStream is = null;
-                        StringBuffer sb = new StringBuffer();
-                        String content = "";
-                        try {
-                            FileInputStream fis = new FileInputStream(htm);
-                            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-                            while ((content = br.readLine()) != null) {
-                                sb.append(content);
-                            }
-                            //output file content
-                            System.out.println(sb);
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-        }
-
+        IndexFile indexFile = new IndexFile();
+        indexFile.setUp();
+        int result = indexFile.getHitCount("filecontent", "各种原因");
+        System.out.println("hit count:" + result);
     }
+
+    int getHitCount(String fieldName, String searchString) throws IOException {
+        IndexSearcher searcher = new IndexSearcher(directory);
+        Term t = new Term(fieldName, searchString);
+        Query query = new TermQuery(t);
+        int hitCount = TestUtil.hitCount(searcher, query);
+        searcher.close();
+        return hitCount;
+    }
+
+    IndexWriter getWriter() throws IOException {
+        return new IndexWriter(directory, new WhitespaceAnalyzer(),
+                IndexWriter.MaxFieldLength.UNLIMITED);
+    }
+
 }
