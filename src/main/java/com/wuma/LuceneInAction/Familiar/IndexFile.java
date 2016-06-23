@@ -2,7 +2,6 @@ package com.wuma.LuceneInAction.Familiar;
 
 import com.wuma.LuceneInAction.fileoper.FileUtil;
 import com.wuma.LuceneInAction.util.TestUtil;
-import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexWriter;
@@ -12,6 +11,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
+import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import java.io.File;
 import java.io.IOException;
@@ -71,7 +71,7 @@ public class IndexFile {
     }
 
     IndexWriter getWriter() throws IOException {
-        return new IndexWriter(directory, new WhitespaceAnalyzer(),
+        return new IndexWriter(directory, new IKAnalyzer(),
                 IndexWriter.MaxFieldLength.UNLIMITED);
     }
 
