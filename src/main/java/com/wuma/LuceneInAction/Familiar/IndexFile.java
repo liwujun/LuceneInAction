@@ -6,9 +6,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.wltea.analyzer.lucene.IKAnalyzer;
@@ -70,6 +68,13 @@ public class IndexFile {
 //        Query query = new TermQuery(t);
         Query query = IKQueryParser.parse(fieldName, searchString);
         int hitCount = TestUtil.hitCount(searcher, query);
+        TopDocs topDocs = searcher.search(query, 10);
+        ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+
+        for (int i = 0; i < topDocs.totalHits; ++i) {
+            Document targetDoc = searcher.doc(scoreDocs[i].doc);
+            System.out.println("内容：" + targetDoc.toString());
+        }
         searcher.close();
         return hitCount;
     }
