@@ -12,6 +12,8 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.wltea.analyzer.lucene.IKAnalyzer;
+import org.wltea.analyzer.lucene.IKQueryParser;
+import org.wltea.analyzer.lucene.IKSimilarity;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,8 +65,10 @@ public class IndexFile {
 
     int getHitCount(String fieldName, String searchString) throws IOException {
         IndexSearcher searcher = new IndexSearcher(directory);
-        Term t = new Term(fieldName, searchString);
-        Query query = new TermQuery(t);
+        searcher.setSimilarity(new IKSimilarity());
+//        Term t = new Term(fieldName, searchString);
+//        Query query = new TermQuery(t);
+        Query query = IKQueryParser.parse(fieldName, searchString);
         int hitCount = TestUtil.hitCount(searcher, query);
         searcher.close();
         return hitCount;
